@@ -2,8 +2,9 @@ const _ = require('lodash')
 const Promise = require('bluebird')
 const path = require('path')
 const { createFilePath } = require('gatsby-source-filesystem')
+const mkdirp = require('mkdirp')
 
-exports.createPages = ({ graphql, actions }) => {
+exports.createPages = ({ graphql, actions, store }) => {
   const { createPage } = actions
 
   return new Promise((resolve, reject) => {
@@ -66,3 +67,31 @@ exports.onCreateNode = ({ node, actions, getNode }) => {
     })
   }
 }
+
+exports.onCreateWebpackConfig = (props, pluginOptions) => {
+  const { stage, loaders, actions, plugins, getNodes, store } = props
+  console.log('onCreate Webpack Config')
+
+  actions.setWebpackConfig({
+    module: {
+      rules: [
+        {
+          test: /\.mdx-fake$/,
+          use: [loaders.js(), { loader: './my-loader' }],
+        },
+      ],
+    },
+    resolve: {
+      modules: [path.resolve(__dirname, 'src'), 'node_modules'],
+    },
+  })
+}
+
+exports.preprocessSource = async function preprocessSource(
+  { filename, contents },
+  pluginOptions
+) {
+  console.log('preprocess', filename)
+}
+
+exports.resolvableExtensions = () => ['.mdx-fake']
